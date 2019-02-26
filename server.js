@@ -12,7 +12,7 @@ const port = process.env.PORT || 8080;
 app.use(bodyParser.json());
 
 mongoose.connect(
-  "mongodb+srv://andreweijie:cdmbcdmb1@busg-hylze.gcp.mongodb.net/busdata?retryWrites=true",
+  "mongodb+srv://andreweijie:cdmbcdmb1@busgprod-hylze.gcp.mongodb.net/busdata?retryWrites=true",
   {
     useNewUrlParser: true
   }
