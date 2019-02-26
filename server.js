@@ -41,6 +41,10 @@ mongoose.connection
     console.log("Connection Error:", err);
   });
 
+app.get("/", (req, res) => {
+  res.send("Hello from App Engine!");
+});
+
 app.get("/api/busdata", (req, res) => {
   console.log(req.url);
   console.log(req.query.buscode);
