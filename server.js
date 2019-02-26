@@ -7,7 +7,7 @@ const BusRouteTest = require("./models/BusRouteTest");
 const BusService = require("./models/busservice");
 const request = require("request");
 
-const port = 5000;
+const port = process.env.PORT || 8080;
 
 app.use(bodyParser.json());
 
