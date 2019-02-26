@@ -6,10 +6,12 @@ const BusStop = require("./models/busstop");
 const BusRouteTest = require("./models/BusRouteTest");
 const BusService = require("./models/busservice");
 const request = require("request");
+const cors = require("cors");
 
 const port = process.env.PORT || 8080;
 
 app.use(bodyParser.json());
+app.use(cors());
 
 mongoose.connect(
   "mongodb://andreweijie:cdmbcdmb1@busgprod-shard-00-00-hylze.gcp.mongodb.net:27017,busgprod-shard-00-01-hylze.gcp.mongodb.net:27017,busgprod-shard-00-02-hylze.gcp.mongodb.net:27017/busdata?ssl=true&replicaSet=BUSGPROD-shard-0&authSource=admin&retryWrites=true",
