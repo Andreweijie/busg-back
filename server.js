@@ -143,7 +143,7 @@ app.get("/api/search", (req, res) => {
 app.get("/api/routes", (req, res) => {
   BusRouteTest.find(
     { ServiceNo: req.query.serviceno },
-    "BusStopCode Description Direction",
+    "BusStopCode Description Direction StopSequence",
     (err, docs) => {
       if (err) {
         console.log(err);
@@ -152,6 +152,6 @@ app.get("/api/routes", (req, res) => {
         res.json(docs);
       }
     }
-  );
+  ).sort({ StopSequence: 1 });
 });
 app.listen(port, () => console.log(`Server running on port ${port}`));
