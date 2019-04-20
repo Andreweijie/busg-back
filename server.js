@@ -127,7 +127,7 @@ app.get("/api/search", (req, res) => {
         "BusStopCode Description",
         (err, doc) => {
           doc.map(e => {
-            resData.push(e.BusStopCode + " " + e.Description);
+            resData.push(e.BusStopCode);
           });
           res.json(
             resData.sort((e1, e2) => {
