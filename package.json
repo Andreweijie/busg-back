@@ -19,6 +19,7 @@
     "body-parser": "^1.18.3",
     "concurrently": "^3.5.1",
     "cors": "^2.8.5",
+    "expo-server-sdk": "^3.2.0",
     "express": "^4.16.4",
     "mongodb": "^3.1.13",
     "mongoose": "^5.4.9",
