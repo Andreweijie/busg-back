@@ -66,6 +66,22 @@ app.get("/api/busdata", (req, res) => {
   });
 });
 
+app.get("/api/busstopcoord", (req, res) => {
+  console.log(req.url);
+  console.log(req.query.buscode);
+  BusStop.find(
+    { BusStopCode: req.query.buscode },
+    "Latitude Longitude",
+    (err, docs) => {
+      if (err) {
+        console.log(err);
+      } else {
+        res.json(docs);
+      }
+    }
+  );
+});
+
 app.get("/api/busname", (req, res) => {
   BusStop.find(
     { BusStopCode: req.query.buscode },
