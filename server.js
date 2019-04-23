@@ -66,20 +66,24 @@ app.get("/api/busdata", (req, res) => {
   });
 });
 
-app.get("/api/busstopcoord", (req, res) => {
+app.post("/api/busstopcoord", (req, res) => {
   console.log(req.url);
-  console.log(req.query.buscode);
-  BusStop.find(
-    { BusStopCode: req.query.buscode },
-    "Latitude Longitude",
-    (err, docs) => {
-      if (err) {
-        console.log(err);
-      } else {
-        res.json(docs);
+  console.log(req.body);
+  let stopArray = req.body;
+  stopCoords = [];
+  stopArray.map(e => {
+    BusStop.find(
+      { BusStopCode: req.query.buscode },
+      "Latitude Longitude",
+      (err, docs) => {
+        if (err) {
+          console.log(err);
+        } else {
+          console.log(docs);
+        }
       }
-    }
-  );
+    );
+  });
 });
 
 app.get("/api/busname", (req, res) => {
@@ -143,7 +147,8 @@ app.get("/api/search", (req, res) => {
         "BusStopCode Description",
         (err, doc) => {
           doc.map(e => {
-            resData.push(e.BusStopCode);
+            let data = { stopCode: e.BusStopCode, description: e.Description };
+            resData.push(data);
           });
           res.json(
             resData.sort((e1, e2) => {
