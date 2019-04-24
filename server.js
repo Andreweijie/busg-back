@@ -102,6 +102,20 @@ app.get("/api/busname", (req, res) => {
   );
 });
 
+app.get("/api/singlestop", (req, res) => {
+  BusStop.find(
+    { BusStopCode: req.query.buscode },
+    "Latitude Longitude",
+    (err, docs) => {
+      if (err) {
+        console.log(err);
+      } else {
+        res.json(docs);
+      }
+    }
+  );
+});
+
 app.get("/api/nearby", (req, res) => {
   BusStop.find({}, "BusStopCode Latitude Longitude", (err, docs) => {
     if (err) {
