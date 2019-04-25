@@ -6,6 +6,7 @@ const BusStop = require("./models/busstop");
 const BusRouteTest = require("./models/BusRouteTest");
 const BusService = require("./models/busservice");
 const request = require("request");
+const async = require("async");
 const cors = require("cors");
 const { Expo } = require("./node_modules/expo-server-sdk");
 const port = process.env.PORT || 8080;
@@ -71,19 +72,25 @@ app.post("/api/busstopcoord", (req, res) => {
   console.log(req.body);
   let stopArray = req.body;
   stopCoords = [];
-  stopArray.map(e => {
-    BusStop.find(
-      { BusStopCode: req.query.buscode },
-      "Latitude Longitude",
-      (err, docs) => {
+  async.map(
+    stopArray,
+    item => {
+      BusStop.find({ BusStopCode: item }, "Latitude Longitude", (err, docs) => {
         if (err) {
           console.log(err);
         } else {
-          console.log(docs);
+          return docs;
         }
+      });
+    },
+    (err, results) => {
+      if (err) {
+        console.log(err);
+      } else {
+        res.json(results);
       }
-    );
-  });
+    }
+  );
 });
 
 app.get("/api/busname", (req, res) => {
