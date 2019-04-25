@@ -74,19 +74,26 @@ app.post("/api/busstopcoord", (req, res) => {
   stopCoords = [];
   async.map(
     stopArray,
-    item => {
-      BusStop.find({ BusStopCode: item }, "Latitude Longitude", (err, docs) => {
-        if (err) {
-          console.log(err);
-        } else {
-          return docs;
+    async item => {
+      let data = [];
+      await BusStop.find(
+        { BusStopCode: item.toString() },
+        "Latitude Longitude",
+        (err, docs) => {
+          if (err) {
+            console.log(err);
+          } else {
+            data = docs;
+          }
         }
-      });
+      );
+      return data;
     },
     (err, results) => {
       if (err) {
         console.log(err);
       } else {
+        console.log(results);
         res.json(results);
       }
     }
