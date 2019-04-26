@@ -7,79 +7,15 @@ const BusRouteTest = require("./models/BusRouteTest");
 const BusService = require("./models/busservice");
 const request = require("request");
 const async = require("async");
-
-const port = 5000;
-
-const areas = {
-  Downtown: { code: 0 },
-  Orchard: { code: 0 },
-  Chinatown: { code: 0 },
-  Bugis: { code: 0 },
-  Lavender: { code: 0 },
-  HarbourFront: { code: 1 },
-  BukitMerah: { code: 1 },
-  RiverValley: { code: 1 },
-  Tanglin: { code: 1 },
-  Holland: { code: 1 },
-  Buona: { code: 1 },
-  PasirPanjang: { code: 1 },
-  Clementi: { code: 1 },
-  WestCoast: { code: 1 },
-  JurongEast: { code: 2 },
-  JurongWest: { code: 2 },
-  Tuas: { code: 2 },
-  JalanBahar: { code: 3 },
-  OldCCK: { code: 3 },
-  BukitTimah: { code: 4 },
-  Lornie: { code: 4 },
-  BukitBatok: { code: 4 },
-  UpperBukitTimah: { code: 4 },
-  CCK: { code: 4 },
-  BukitPanjang: { code: 4 },
-  Kranji: { code: 4 },
-  NeoTiew: { code: 4 },
-  Woodlands: { code: 4 },
-  Admiralty: { code: 4 },
-  JB: { code: 4 },
-  Moulmein: { code: 5 },
-  ToaPayoh: { code: 5 },
-  Bishan: { code: 5 },
-  AMK: { code: 5 },
-  Thomson: { code: 5 },
-  Lentor: { code: 5 },
-  Yishun: { code: 5 },
-  Sembawang: { code: 5 },
-  KallangBahru: { code: 6 },
-  Serangoon: { code: 6 },
-  Hougang: { code: 6 },
-  Sengkang: { code: 6 },
-  Punggol: { code: 6 },
-  SeletarWest: { code: 6 },
-  MacPherson: { code: 7 },
-  Ubi: { code: 7 },
-  KakiBukit: { code: 7 },
-  Tampines: { code: 7 },
-  PasirRis: { code: 7 },
-  Kallang: { code: 8 },
-  Geylang: { code: 8 },
-  JooChiat: { code: 8 },
-  TelokKurau: { code: 8 },
-  Eunos: { code: 8 },
-  Bedok: { code: 8 },
-  BedokReservoir: { code: 8 },
-  Simpang: { code: 8 },
-  Mountbatten: { code: 9 },
-  EastCoast: { code: 9 },
-  UpperEC: { code: 9 },
-  Simei: { code: 9 },
-  Loyang: { code: 9 },
-  Changi: { code: 9 }
-};
+const cors = require("cors");
+const { Expo } = require("./node_modules/expo-server-sdk");
+const port = process.env.PORT || 8080;
 
 app.use(bodyParser.json());
+app.use(cors());
 
 mongoose.connect(
-  "mongodb+srv://andreweijie:cdmbcdmb1@busgprod-hylze.gcp.mongodb.net/busdata?retryWrites=true",
+  "mongodb://andreweijie:cdmbcdmb1@busgprod-shard-00-00-hylze.gcp.mongodb.net:27017,busgprod-shard-00-01-hylze.gcp.mongodb.net:27017,busgprod-shard-00-02-hylze.gcp.mongodb.net:27017/busdata?ssl=true&replicaSet=BUSGPROD-shard-0&authSource=admin&retryWrites=true",
   {
     useNewUrlParser: true
   }
@@ -99,7 +35,6 @@ let distance = (lat1, lon1, lat2, lon2) => {
   let d = R * c;
   return Math.round(d * 1000);
 };
-
 async function searchServiceNo(query, callback) {
   let searchResults = [];
   await BusService.find(
@@ -151,7 +86,13 @@ mongoose.connection
     console.log("Connection Error:", err);
   });
 
+app.get("/", (req, res) => {
+  res.send("Hello from App Engine!");
+});
+
 app.get("/api/busdata", (req, res) => {
+  console.log(req.url);
+  console.log(req.query.buscode);
   var options = {
     method: "GET",
     url: "http://datamall2.mytransport.sg/ltaodataservice/BusArrivalv2",
@@ -168,10 +109,59 @@ app.get("/api/busdata", (req, res) => {
   });
 });
 
+app.post("/api/busstopcoord", (req, res) => {
+  console.log(req.url);
+  console.log(req.body);
+  let stopArray = req.body;
+  stopCoords = [];
+  async.map(
+    stopArray,
+    async item => {
+      let data = [];
+      await BusStop.find(
+        { BusStopCode: item.toString() },
+        "Latitude Longitude",
+        (err, docs) => {
+          if (err) {
+            console.log(err);
+          } else {
+            data = docs;
+          }
+        }
+      );
+      return data;
+    },
+    (err, results) => {
+      if (err) {
+        console.log(err);
+      } else {
+        console.log(results);
+        res.json(results);
+      }
+    }
+  );
+});
+
 app.get("/api/busname", (req, res) => {
   BusStop.find(
     { BusStopCode: req.query.buscode },
     "Description",
+    (err, docs) => {
+      if (err) {
+        console.log(err);
+      } else {
+        console.log(req.url);
+        res.json(docs);
+        console.log("Document retrieved successfully");
+      }
+    }
+  );
+});
+
+app.get("/api/singlestop", (req, res) => {
+  BusStop.find(
+    { BusStopCode: req.query.buscode },
+    "Latitude Longitude",
     (err, docs) => {
       if (err) {
         console.log(err);
@@ -187,6 +177,7 @@ app.get("/api/nearby", (req, res) => {
     if (err) {
       console.log(err);
     } else {
+      console.log(req.url);
       const userLat = req.query.userLat;
       const userLon = req.query.userLon;
       let resEnd = {};
@@ -225,38 +216,6 @@ app.get("/api/search", (req, res) => {
   );
 });
 
-app.post("/api/busstopcoord", (req, res) => {
-  console.log(req.url);
-  console.log(req.body);
-  let stopArray = req.body;
-  stopCoords = [];
-  async.map(
-    stopArray,
-    async item => {
-      let data = [];
-      await BusStop.find(
-        { BusStopCode: item.toString() },
-        "Latitude Longitude",
-        (err, docs) => {
-          if (err) {
-            console.log(err);
-          } else {
-            data = docs;
-          }
-        }
-      );
-      return data;
-    },
-    (err, results) => {
-      if (err) {
-        console.log(err);
-      } else {
-        res.json(results);
-      }
-    }
-  );
-});
-
 app.get("/api/routes", (req, res) => {
   BusRouteTest.find(
     { ServiceNo: req.query.serviceno },
@@ -270,5 +229,56 @@ app.get("/api/routes", (req, res) => {
       }
     }
   ).sort({ StopSequence: 1 });
+});
+
+app.post("/users/pushtoken", (req, res) => {
+  // Create a new Expo SDK client
+  let expo = new Expo();
+
+  // Create the messages that you want to send to clents
+  let messages = [];
+  for (let pushToken of somePushTokens) {
+    // Each push token looks like ExponentPushToken[xxxxxxxxxxxxxxxxxxxxxx]
+
+    // Check that all your push tokens appear to be valid Expo push tokens
+    if (!Expo.isExpoPushToken(pushToken)) {
+      console.error(`Push token ${pushToken} is not a valid Expo push token`);
+      continue;
+    }
+
+    // Construct a message (see https://docs.expo.io/versions/latest/guides/push-notifications.html)
+    messages.push({
+      to: pushToken,
+      sound: "default",
+      body: "This is a test notification",
+      data: { withSome: "data" }
+    });
+  }
+
+  // The Expo push notification service accepts batches of notifications so
+  // that you don't need to send 1000 requests to send 1000 notifications. We
+  // recommend you batch your notifications to reduce the number of requests
+  // and to compress them (notifications with similar content will get
+  // compressed).
+  let chunks = expo.chunkPushNotifications(messages);
+  let tickets = [];
+  (async () => {
+    // Send the chunks to the Expo push notification service. There are
+    // different strategies you could use. A simple one is to send one chunk at a
+    // time, which nicely spreads the load out over time:
+    for (let chunk of chunks) {
+      try {
+        let ticketChunk = await expo.sendPushNotificationsAsync(chunk);
+        console.log(ticketChunk);
+        tickets.push(...ticketChunk);
+        // NOTE: If a ticket contains an error code in ticket.details.error, you
+        // must handle it appropriately. The error codes are listed in the Expo
+        // documentation:
+        // https://docs.expo.io/versions/latest/guides/push-notifications#response-format
+      } catch (error) {
+        console.error(error);
+      }
+    }
+  })();
 });
 app.listen(port, () => console.log(`Server running on port ${port}`));
