@@ -36,49 +36,6 @@ let distance = (lat1, lon1, lat2, lon2) => {
   return Math.round(d * 1000);
 };
 
-async function searchServiceNo(query, callback) {
-  let searchResults = [];
-  await BusService.find(
-    { ServiceNo: new RegExp(query, "i"), Direction: 1 },
-    "ServiceNo",
-    (err, docs) => {
-      docs
-        .sort((e1, e2) => {
-          return e1.ServiceNo.length - e2.ServiceNo.length;
-        })
-        .slice(0, 4)
-        .map(f => {
-          searchResults.push(f.ServiceNo);
-        });
-      callback(null, searchResults);
-    }
-  ).sort({ ServiceNo: 1 });
-}
-
-async function searchStopNumber(query, callback) {
-  let searchResults = [];
-  BusStop.find(
-    {
-      $or: [
-        { Description: new RegExp(query, "i") },
-        { BusStopCode: new RegExp(query, "i") }
-      ]
-    },
-    "BusStopCode Description",
-    (err, doc) => {
-      doc.map(e => {
-        let data = { stopCode: e.BusStopCode, description: e.Description };
-        searchResults.push(data);
-      });
-      callback(
-        null,
-        searchResults.sort((e1, e2) => {
-          return e1.length - e2.length;
-        })
-      );
-    }
-  ).limit(8);
-
 mongoose.connection
   .once("open", () => {
     console.log("Connection has been made...");
@@ -198,24 +155,39 @@ app.get("/api/nearby", (req, res) => {
   });
 });
 
-  app.get("/api/search", (req, res) => {
-    let resData = [];
-    let searchQ = req.query.searchQuery;
-    async.parallel(
-      [
-        function (callback) {
-          searchServiceNo(searchQ, callback);
-        },
-        function (callback) {
-          searchStopNumber(searchQ, callback);
+app.get("/api/search", (req, res) => {
+  let resData = [];
+  let searchQ = req.query.searchQuery;
+  BusService.find(
+    { ServiceNo: new RegExp(searchQ, "i"), Direction: 1 },
+    "ServiceNo",
+    (err, docs) => {
+      docs
+        .sort((e1, e2) => {
+          return e1.ServiceNo.length - e2.ServiceNo.length;
+        })
+        .slice(0, 4)
+        .map(f => {
+          resData.push(f.ServiceNo);
+        });
+      BusStop.find(
+        { BusStopCode: new RegExp(searchQ, "i") },
+        "BusStopCode Description",
+        (err, doc) => {
+          doc.map(e => {
+            let data = { stopCode: e.BusStopCode, description: e.Description };
+            resData.push(data);
+          });
+          res.json(
+            resData.sort((e1, e2) => {
+              return e1.length - e2.length;
+            })
+          );
         }
-      ],
-      (err, results) => {
-        console.log(results);
-        res.json(results);
-      }
-    );
-  });
+      ).limit(4);
+    }
+  ).sort({ ServiceNo: 1 });
+});
 
 app.get("/api/routes", (req, res) => {
   BusRouteTest.find(
